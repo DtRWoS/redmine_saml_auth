@@ -1,4 +1,4 @@
-ActionController::Routing::Routes.draw do |map|
-  map.saml_login 'auth/saml', :controller => 'saml', :action => 'index'
-  map.saml_consume 'auth/saml/consume', :controller => 'saml', :action => 'consume'
+RedmineApp::Application.routes.draw do
+  match '/auth/saml' => 'saml#index'
+  match '/auth/saml/consume' => 'saml#consume'
 end

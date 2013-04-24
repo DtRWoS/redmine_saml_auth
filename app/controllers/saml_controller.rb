@@ -1,4 +1,4 @@
-require 'onelogin/saml'
+require 'ruby-saml'
 
 class SamlController < ApplicationController
   skip_before_filter :verify_authenticity_token, :only => [:consume]
@@ -11,10 +11,15 @@ class SamlController < ApplicationController
   end
 
   def consume
-    response          = Onelogin::Saml::Response.new(params[:SAMLResponse])
+    response          = Onelogin::Saml::Response.new(params[:SAMLResponse], :skip_conditions =>  true)
     response.settings = Account.get_saml_settings
 
-    if response.is_valid? && user = User.find_by_mail(response.name_id)
+	logger.info "User #{response.name_id} trying to login"
+	#logger.info "Yaml of data from onelogin #{response.to_yaml}"
+	logger.info "User as located #{User.find_by_login(response.name_id).to_yaml}"
+	logger.info "Is Response From OneLogin Valid? #{response.is_valid?}"
+	puts response.validate!
+    if response.is_valid? && user = User.find_by_login(response.name_id)
 
       self.logged_user = user
       # generate a key and set cookie if autologin
@@ -26,7 +31,7 @@ class SamlController < ApplicationController
       redirect_back_or_default :controller => 'my', :action => 'page'
 
     else
-      invalid_credentials(user)
+      #invalid_credentials(user)  #Throws an Error
       error = l(:notice_account_invalid_creditentials)
     end
   end
